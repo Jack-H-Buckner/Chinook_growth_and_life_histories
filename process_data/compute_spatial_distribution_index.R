@@ -155,6 +155,12 @@ for(i in 1:n){
 }
 
 
+# remove stocks with fewer than 100 observations for ODI
+dat1 <- dat1 %>% 
+  group_by(release_location_rmis_basin,release_type,run) %>%
+  mutate(n_obs = n())%>%
+  filter(n_obs > 100)
+
 ## method used before 8/5/22 to group stock and calcaulte the ocena distirubton index
 distribution_summary_old <- dat1 %>%
   dplyr::group_by(stock) %>%
@@ -175,6 +181,7 @@ distribution_summary_old <- dat1 %>%
 ## new method used to calcualte ocean distributon index 
 ## calcualting ocean distribuiton by RMIS basin, run and release type. 
 ## not diferntiating by sex 
+
 ODI <- dat1 %>%
   filter(!(is.na(latitude)), age > 2)%>%
   dplyr::group_by(release_location_rmis_basin,release_type,run) %>%
