@@ -2,31 +2,43 @@
 library(dplyr)
 library(lubridate)
 options(mc.cores = parallel::detectCores())
-setwd("~/Chinook_growth_repo")
+setwd("~/chinook_growth_repo")
 
-### this needs a line to convert all releases/ recoveries from LOSN (lower snake river) to 
-### SNAK region rather than the  CECR region 
+"change"
 
-
+# read in raw data 
 dat = readRDS("data/joined_releases_recoveries_locations.rds")
+
+# regions used to filter stocks prior to 8/5/22
+# c("CECR","FRTH","LOCR","NOOR","NWC","SKAG","SNAK","SOOR","UPCR")
+
+# filter for study region and non missing values for dates 
 dat = dplyr::filter(dat, !is.na(length), # sex != "", remove filter for missing sex obs 
-                    release_location_rmis_region %in% c("CECR","FRTH","LOCR","NOOR","NWC","SKAG","SNAK","SOOR","UPCR"),
-                    !is.na(recovery_date), !is.na(first_release_date), nchar(recovery_date)==8, nchar(first_release_date)==8)
+                    release_location_rmis_region %in% c("LOCR","UPCR","CECR", "SNAK","NOOR","WILP","GRAY","NWC","SKAG","NPS"),
+                    !is.na(recovery_date),
+                    !is.na(first_release_date), 
+                    nchar(recovery_date)==8,
+                    nchar(first_release_date)==8)
+
+# convert data values 
 dat$recovery_date = lubridate::parse_date_time(paste(substr(dat$recovery_date,1,4), substr(dat$recovery_date,5,6), substr(dat$recovery_date,7,8)), orders = "ymd")
 dat$release_date = lubridate::parse_date_time(paste(substr(dat$first_release_date,1,4), substr(dat$first_release_date,5,6), substr(dat$first_release_date,7,8)), orders = "ymd")
 
+# convert dates to years and days
 dat$recovery_year = lubridate::year(dat$recovery_date)
 dat$recovery_day = lubridate::yday(dat$recovery_date)
 dat$release_year = lubridate::year(dat$release_date)
 dat$release_day = lubridate::yday(dat$release_date)
 
-# adding age here to limit fishery - gear - age combos
+# Compute age starting in the brood year
 dat$age = dat$recovery_year - dat$brood_year
 dat$age_days = lubridate::time_length(lubridate::interval(dat$release_date, dat$recovery_date), unit = "day" )
+dat$release_age = dat$release_year- dat$brood_year
 
-
+# filter for primary age groups 
 dat = dplyr::filter(dat, age %in% 2:5)
 
+# filter very old brod years with limited data  
 dat = dat %>%
   dplyr::filter(brood_year > 1970)
 
@@ -44,9 +56,8 @@ define_release_type <- function(age,release_day){
 }
 
 # add release type to data frame 
-dat = dat%>%dplyr::mutate(release_age = release_year- brood_year)
-release_type <- c()
-length(release_type) <- nrow(dat)
+release_type <- rep(0,nrow(dat1))
+
 for( i in 1:nrow(dat)){
   release_type[i] <- define_release_type(dat$release_age[i], dat$release_day[i])
 }
