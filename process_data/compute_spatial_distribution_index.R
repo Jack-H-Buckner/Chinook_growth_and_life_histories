@@ -56,7 +56,9 @@ dat1$release_day = lubridate::yday(dat1$release_date)
 dat1$age = dat1$recovery_year - dat1$brood_year
 dat1$age_days = lubridate::time_length(lubridate::interval(dat1$release_date, dat1$recovery_date), unit = "day" )
 dat1$release_age = dat1$release_year- dat1$brood_year
-
+dat1$ocean_age = dat1$recovery_year - dat1$release_year
+  
+  
 # filter out unreasanoble ages
 dat1 <- dat1 %>% filter(age < 7, age > 0)
 
@@ -140,9 +142,10 @@ locations <- locations %>%
   dplyr::group_by(fishery, rec_year) %>%
   dplyr::summarize(latitude = mean(latitude))
 
+
 # itterate over observaitons
-# all missing latitude values impute to the mean 
-# lititude for the fishery. 
+# all missing latitude values impute to the mean
+# lititude for the fishery.
 dat1$imputed_val <- rep(0,nrow(dat1))
 n <- nrow(dat1)
 
@@ -155,10 +158,11 @@ for(i in 1:n){
 }
 
 
+
 # remove stocks with fewer than 100 observations for ODI
 dat1 <- dat1 %>% 
   group_by(release_location_rmis_basin,release_type,run) %>%
-  mutate(n_obs = n())%>%
+  mutate(n_obs = sum(ocean_age > 1))%>%
   filter(n_obs > 100)
 
 ## method used before 8/5/22 to group stock and calcaulte the ocena distirubton index
@@ -183,7 +187,7 @@ distribution_summary_old <- dat1 %>%
 ## not diferntiating by sex 
 
 ODI <- dat1 %>%
-  filter(!(is.na(latitude)), age > 2)%>%
+  filter(!(is.na(latitude)), ocean_age > 1)%>%
   dplyr::group_by(release_location_rmis_basin,release_type,run) %>%
   dplyr::summarize(ODI = mean(latitude),
                    ODI_check = sum(latitude*(1-imputed_val))/sum((1-imputed_val)),
@@ -211,7 +215,7 @@ ggplot(
   aes(x = Index, y = Index_no_imp))+
   geom_point()+
   geom_smooth(method = "lm")+
-  ggtitle(paste("Correlation", 
+  ggtitle(paste("Correlation",
                      cor(distribution_summary$ODI,
                          distribution_summary$ODI_check)))+
   theme_classic()
