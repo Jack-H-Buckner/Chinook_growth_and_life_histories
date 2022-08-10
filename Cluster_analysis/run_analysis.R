@@ -2,7 +2,7 @@ library(ggplot2)
 library(dplyr)
 library(reshape2)
 setwd("~/Chinook_growth_repo")
-source("clusters/GAM_clusters.R")
+source("Cluster_analysis/GAM_clusters.R")
 
 ################################################################################### 
 #####                                                                         ##### 
@@ -18,25 +18,7 @@ source("clusters/GAM_clusters.R")
 # load length at age data 
 # These data are processed by the run_analysis.R 
 # script in the process_data file
-dat_means <- read.csv("transformed_data/increment_model_data.csv")
-
-# additional processing 
-d <- dat_means %>%
-  filter(age == 4)%>%  # get lengths at age 4
-  group_by(stock) %>%  # filter for stocks with long enough time series 
-  mutate(max_bood_year = max(brood_year),
-         min_brood_year = min(brood_year),
-         n_year = length(unique(brood_year)))%>%
-  filter(max_bood_year-min_brood_year > 25,
-         n_year > 20)%>%
-  ungroup()%>%
-  group_by(stock)%>% # standardize lengt hat age observations for each stock 
-  mutate(length_unscaled = length,
-         m = mean(length))%>%
-  mutate(length = length - m)%>%
-  ungroup()%>%
-  mutate(s = sd(length))%>%
-  mutate(length = length/s)
+d <- read.csv( "~/Chinook_growth_repo/transformed_data/cluster_analysis_data.csv")
 
 
 N_stocks <- length(unique(d$stock))
@@ -49,9 +31,6 @@ d$stock_char <- d$stock
 d$stock <- as.numeric(as.factor(d$stock))
 N_iter <- 500
 
-
-seed <- 141996
-
 #mod_k2 <- gam_k_means_2(d, 2, 500, temp, seed)
 
 
@@ -60,196 +39,95 @@ args_ls <- list(c(2,141996),c(3,141996), c(4,141996), c(5,141996), c(6,141996),
                 c(2,2101993),c(3,2101993), c(4,2101993), c(5,2101993), c(6,2101993),
                 c(2,100),c(3,100), c(4,100), c(5,100), c(6,100))
 
+
+args_ls <- list(c(2,141996),c(2,161961),c(2,2101993),
+                c(2,100),c(2,250),c(2,3201961),c(2,8822),
+                c(3,141996),c(3,161961),c(3,2101993),
+                c(3,100),c(3,250),c(3,3201961),c(3,8822),
+                c(4,141996),c(4,161961),c(4,2101993),
+                c(4,100),c(4,250),c(4,3201961),c(4,8822),
+                c(5,141996),c(5,161961),c(5,2101993),
+                c(5,100),c(5,250),c(5,3201961),c(5,8822),
+                c(6,141996),c(6,161961),c(6,2101993),
+                c(6,100),c(6,250),c(6,3201961),c(6,8822)) 
+
 fun <- function(x){gam_k_means_2(d, x[1],N_iter, temp, x[2])}
 
 #options(mc.cores = parallel::detectCores())
 options(mc.cores = 8)
 output_ls <- parallel::mclapply(args_ls, fun) # 15
-
-mod_k2 <- output_ls[[1]]
-
-
-
-# run algorithm for k in {2,3,4,5}
-mod_n2 <- output_ls[[1]]
-write.csv(mod_n2$dat, "model_output/clusters/data_n2_age4_seed1.csv")
-write.csv(mod_n2$likelihoods, "model_output/clusters/likelihoods_n2_age4_seed1.csv")
-write.csv(data.frame(MSE = c(mod_n2$MSE)),
-          "model_output/clusters/MSE_n2_seed1.csv")
-ggplot(mod_n2$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n2_seed1.png")
-
-mod_n3 <- output_ls[[2]]
-write.csv(mod_n3$dat, "model_output/clusters/data_n3_age4_seed1.csv")
-write.csv(mod_n3$likelihoods, "model_output/clusters/likelihoods_n3_age4_seed1.csv")
-write.csv(data.frame(MSE= c(mod_n3$MSE)),
-          "model_output/clusters/MSE_n3_seed1.csv")
-ggplot(mod_n3$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n3_seed1.png")
-
-mod_n4 <- output_ls[[3]]
-write.csv(mod_n4$dat, "model_output/clusters/data_n4_age4_seed1.csv")
-write.csv(mod_n4$likelihoods, "model_output/clusters/likelihoods_n4_age4_seed1.csv")
-write.csv(data.frame(MSE = c(mod_n4$MSE)),
-          "model_output/clusters/MSE_n4_seed1.csv")
-ggplot(mod_n4$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n4_seed1.png")
-
-mod_n5 <- output_ls[[4]]
-write.csv(mod_n5$dat, "model_output/clusters/data_n5_age4_seed1.csv")
-write.csv(mod_n5$likelihoods, "model_output/clusters/likelihoods_n5_age4_seed1.csv")
-write.csv(data.frame(MSE = c(mod_n5$MSE)),
-          "model_output/clusters/MSE_n5_seed1.csv")
-ggplot(mod_n4$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggplot(mod_n5$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n5_seed1.png")
-
-
-mod_n6 <- output_ls[[5]]
-write.csv(mod_n6$dat, "model_output/clusters/data_n6_age4_seed1.csv")
-write.csv(mod_n6$likelihoods, "model_output/clusters/likelihoods_n6_age4_seed1.csv")
-write.csv(data.frame(MSE = c(mod_n6$MSE)),
-          "model_output/clusters/MSE_n6_seed1.csv")
-ggplot(mod_n6$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n6_seed1.png")
+save(output_ls, file = "~/Chinook_growth_repo/model_output/clusters/data_list.Rdata")
 
 
 
 
-# run algorithm for k in {2,3,4,5}
-mod_n2 <- output_ls[[6]]
-write.csv(mod_n2$dat, "model_output/clusters/data_n2_age4_seed2.csv")
-write.csv(mod_n2$likelihoods, "model_output/clusters/likelihoods_n2_age4_seed2.csv")
-write.csv(data.frame(MSE = c(mod_n2$MSE)),
-          "model_output/clusters/MSE_n2_seed2.csv")
-ggplot(mod_n2$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n2_seed2.png")
+save_dat <- function(ind, n, seed){
+  # run algorithm for k in {2,3,4,5}
+  mod_n2 <- output_ls[[ind]]
+  write.csv(mod_n2$dat, 
+            paste0("~/Chinook_growth_repo/model_output/clusters/data_n",
+            n, "_age4_seed", seed, ".csv"))
+  write.csv(mod_n2$likelihoods,
+            paste0("~/Chinook_growth_repo/model_output/clusters/likelihoods_n",
+                    n, "_age4_seed", seed, ".csv"))
+  write.csv(data.frame(MSE = c(mod_n2$MSE)),
+            paste0("~/Chinook_growth_repo/model_output/clusters/MSE_n",
+                   n, "_seed", seed, ".csv"))
+  ggplot(mod_n2$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
+  ggsave(paste0("~/Chinook_growth_repo/model_output/clusters/EM_algorithm_n",
+                n, "_seed", seed, ".png"))
+} 
 
-mod_n3 <- output_ls[[7]]
-write.csv(mod_n3$dat, "model_output/clusters/data_n3_age4_seed2.csv")
-write.csv(mod_n3$likelihoods, "model_output/clusters/likelihoods_n3_age4_seed2.csv")
-write.csv(data.frame(MSE = c(mod_n3$MSE)),
-          "model_output/clusters/MSE_n3_seed2.csv")
-ggplot(mod_n3$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n3_seed2.png")
-
-mod_n4 <- output_ls[[8]]
-write.csv(mod_n4$dat, "model_output/clusters/data_n4_age4_seed2.csv")
-write.csv(mod_n4$likelihoods, "model_output/clusters/likelihoods_n4_age4_seed2.csv")
-write.csv(data.frame(MSE = c(mod_n4$MSE)),
-          "model_output/clusters/MSE_n4_seed2.csv")
-ggplot(mod_n4$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n4_seed2.png")
-
-mod_n5 <- output_ls[[9]]
-write.csv(mod_n5$dat, "model_output/clusters/data_n5_age4_seed2.csv")
-write.csv(mod_n5$likelihoods, "model_output/clusters/likelihoods_n5_age4_seed2.csv")
-write.csv(data.frame(MSE = c(mod_n5$MSE)),
-          "model_output/clusters/MSE_n5_seed2.csv")
-ggplot(mod_n5$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n5_seed2.png")
+load(file = "~/Chinook_growth_repo/model_output/clusters/data_list.Rdata")
 
 
-mod_n6 <- output_ls[[10]]
-write.csv(mod_n6$dat, "model_output/clusters/data_n6_age4_seed2.csv")
-write.csv(mod_n6$likelihoods, "model_output/clusters/likelihoods_n6_age4_seed2.csv")
-write.csv(data.frame(MSE = c(mod_n6$MSE)),
-          "model_output/clusters/MSE_n6_seed2.csv")
-ggplot(mod_n6$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n6_seed2.png")
+# save data for n = 2
+save_dat(1,2,1)
+save_dat(2,2,2)
+save_dat(3,2,3)
+save_dat(4,2,4)
+save_dat(5,2,5)
+save_dat(6,2,6)
+save_dat(7,2,7)
+
+# save data for n = 3
+save_dat(8,3,1)
+save_dat(9,3,2)
+save_dat(10,3,3)
+save_dat(11,3,4)
+save_dat(12,3,5)
+save_dat(13,3,6)
+save_dat(14,3,7)
 
 
+# save data for n = 4
+save_dat(15,4,1)
+save_dat(16,4,2)
+save_dat(17,4,3)
+save_dat(18,4,4)
+save_dat(19,4,5)
+save_dat(20,4,6)
+save_dat(21,4,7)
 
 
-
-mod_n2 <- output_ls[[11]]
-write.csv(mod_n2$dat, "model_output/clusters/data_n2_age4_seed3.csv")
-write.csv(mod_n2$likelihoods, "model_output/clusters/likelihoods_n2_age4_seed3.csv")
-write.csv(data.frame(MSE = c(mod_n2$MSE)),
-          "model_output/clusters/MSE_n2_seed3.csv")
-ggplot(mod_n2$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n2_seed3.png")
-
-mod_n3 <- output_ls[[12]]
-write.csv(mod_n3$dat, "model_output/clusters/data_n3_age4_seed3.csv")
-write.csv(mod_n3$likelihoods, "model_output/clusters/likelihoods_n3_age4_seed3.csv")
-write.csv(data.frame(MSE = c(mod_n3$MSE)),
-          "model_output/clusters/MSE_n3_seed3.csv")
-ggplot(mod_n3$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n3_seed3.png")
-
-mod_n4 <- output_ls[[13]]
-write.csv(mod_n4$dat, "model_output/clusters/data_n4_age4_seed3.csv")
-write.csv(mod_n4$likelihoods, "model_output/clusters/likelihoods_n4_age4_seed3.csv")
-write.csv(data.frame(MSE= c(mod_n4$MSE)),
-          "model_output/clusters/MSE_n4_seed3.csv")
-ggplot(mod_n4$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n4_seed3.png")
-
-mod_n5 <- output_ls[[14]]
-write.csv(mod_n5$dat, "model_output/clusters/data_n5_age4_seed3.csv")
-write.csv(mod_n5$likelihoods, "model_output/clusters/likelihoods_n5_age4_seed3.csv")
-write.csv(data.frame(MSE = c(mod_n5$MSE)),
-          "model_output/clusters/MSE_n5_seed3.csv")
-ggplot(mod_n5$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n5_seed3.png")
+# save data for n = 5
+save_dat(22,5,1)
+save_dat(23,5,2)
+save_dat(24,5,3)
+save_dat(25,5,4)
+save_dat(26,5,5)
+save_dat(27,5,6)
+save_dat(28,5,7)
 
 
-mod_n6 <- output_ls[[15]]
-write.csv(mod_n6$dat, "model_output/clusters/data_n6_age4_seed3.csv")
-write.csv(mod_n6$likelihoods, "model_output/clusters/likelihoods_n6_age4_seed3.csv")
-write.csv(data.frame(MSE = c(mod_n6$MSE)),
-          "model_output/clusters/MSE_n6_seed3.csv")
-ggplot(mod_n6$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n6_seed3.png")
+# save data for n = 6
+save_dat(29,6,1)
+save_dat(30,6,2)
+save_dat(31,6,3)
+save_dat(32,6,4)
+save_dat(33,6,5)
+save_dat(34,6,6)
+save_dat(35,6,7)
 
-
-
-
-
-
-
-
-
-mod_n2 <- output_ls[[16]]
-write.csv(mod_n2$dat, "model_output/clusters/data_n2_age4_seed4.csv")
-write.csv(mod_n2$likelihoods, "model_output/clusters/likelihoods_n2_age4_seed4.csv")
-write.csv(data.frame(MSE = c(mod_n2$MSE)),
-          "model_output/clusters/MSE_n2_seed4.csv")
-ggplot(mod_n2$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n2_seed4.png")
-
-mod_n3 <- output_ls[[17]]
-write.csv(mod_n3$dat, "model_output/clusters/data_n3_age4_seed4.csv")
-write.csv(mod_n3$likelihoods, "model_output/clusters/likelihoods_n3_age4_seed4.csv")
-write.csv(data.frame(MSE = c(mod_n3$MSE)),
-          "model_output/clusters/MSE_n3_seed4.csv")
-ggplot(mod_n3$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n3_seed4.png")
-
-mod_n4 <- output_ls[[18]]
-write.csv(mod_n4$dat, "model_output/clusters/data_n4_age4_seed4.csv")
-write.csv(mod_n4$likelihoods, "model_output/clusters/likelihoods_n4_age4_seed4.csv")
-write.csv(data.frame(MSE= c(mod_n4$MSE)),
-          "model_output/clusters/MSE_n4_seed4.csv")
-ggplot(mod_n4$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n4_seed4.png")
-
-mod_n5 <- output_ls[[19]]
-write.csv(mod_n5$dat, "model_output/clusters/data_n5_age4_seed4.csv")
-write.csv(mod_n5$likelihoods, "model_output/clusters/likelihoods_n5_age4_seed4.csv")
-write.csv(data.frame(MSE = c(mod_n5$MSE)),
-          "model_output/clusters/MSE_n5_seed4.csv")
-ggplot(mod_n5$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n5_seed4.png")
-
-
-mod_n6 <- output_ls[[20]]
-write.csv(mod_n6$dat, "model_output/clusters/data_n6_age4_seed4.csv")
-write.csv(mod_n6$likelihoods, "model_output/clusters/likelihoods_n6_age4_seed4.csv")
-write.csv(data.frame(MSE = c(mod_n6$MSE)),
-          "model_output/clusters/MSE_n6_seed4.csv")
-ggplot(mod_n6$covergance,aes(x = x, y=y))+geom_point()+geom_smooth()
-ggsave("figures/EM_algorithm_convergend_n6_seed4.png")
 
 
