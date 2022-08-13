@@ -13,35 +13,6 @@ marine_dsn_dat <- read.csv("~/Chinook_growth_repo/transformed_data/marine_observ
 ## load cluster analysis data for stocks to look at 
 cluster_dat <- read.csv("~/Chinook_growth_repo/transformed_data/cluster_analysis_data.csv")
 
-
-### Check the effects of keeping observations with missing vlaeus for sex
-### added 8/5/22
-# computre val old way removing missing values of sex
-ODI_filter <- marine_dsn_dat %>%
-  dplyr::filter(sex %in% c("M","F"),!(is.na(latitude))) %>%
-  dplyr::group_by(release_location_rmis_basin,release_type,run) %>%
-  dplyr::summarize(COG_filter = mean(latitude),
-                   n_filter = n())
-
-# compute value new way using these values 
-ODI_ <- marine_dsn_dat %>%
-  dplyr::filter(!(is.na(latitude))) %>%
-  dplyr::group_by(release_location_rmis_basin,release_type,run) %>%
-  dplyr::summarize(COG = mean(latitude),
-                   n = n())
-
-compare_dat <- merge(ODI_,ODI_filter, 
-                     by = c("release_location_rmis_basin",
-                            "release_type",
-                            "run"))
-
-ggplot(compare_dat,
-       aes(x=as.numeric(COG_filter),y=as.numeric(COG)))+
-  geom_point()+
-  geom_smooth(method="lm")
-
-
-
 #### Check data for robustness to biases in ocean distirubtion 
 #### caused by variation in distirubtion by age 
 
@@ -125,7 +96,7 @@ ggplot(marine_dsn_dat_clusters %>%
           dplyr::filter(!(is.na(latitude)), ocean_age > 1) %>%
           group_by(run_origin, ocean_age == 3) %>%
           summarize(ODI = mean(latitude)) %>%
-          reshape2::dcast(n+run_origin ~ `ocean_age == 3` ),
+          reshape2::dcast(run_origin ~ `ocean_age == 3` ),
        aes(x = `FALSE`, y = `TRUE`))+
   geom_point()+
   geom_smooth(method = "lm")+

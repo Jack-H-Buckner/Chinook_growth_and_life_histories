@@ -104,11 +104,11 @@ p <- ggplot(data_clusters_k2  %>%
         legend.title = element_text(size=28, family = "Times New Roman"),
         legend.text  = element_text(size=24, family = "Times New Roman"),
         legend.position = "bottom")
-
-ggsave(file = "figures/Clusters_n2_seed2.png",
+p
+ggsave(file = "figures/Cluster_trends_n2_seed2.png",
        p,
        width = 6,
-       height = 10)
+       height = 8)
 
 
 
@@ -117,7 +117,7 @@ ggsave(file = "figures/Clusters_n2_seed2.png",
 stock_characteristics$stock_char <- stock_characteristics$stock
 d_merged_k2 <- merge(data_clusters_k2 ,stock_characteristics, by = "stock_char")
 
-ggplot(d_merged_k2 %>% 
+p <- ggplot(d_merged_k2 %>% 
          group_by(stock_char)%>%
          summarize(cluster = mean(cluster),
                    ODI= mean(ODI)),
@@ -134,7 +134,12 @@ ggplot(d_merged_k2 %>%
         axis.text = element_text(size=24, family = "Times New Roman"),
         legend.title = element_text(size=28, family = "Times New Roman"),
         legend.text  = element_text(size=24, family = "Times New Roman"),
-        legend.position = "bottom")
+        legend.position = "none")
+
+ggsave(file = "figures/Clusters_ODI_n2_seed2.png",
+       p,
+       width = 7,
+       height = 6.0)
 
 # p vlaue 
 d_test <- d_merged_k2 %>% 
@@ -147,7 +152,7 @@ kruskal.test(as.factor(cluster) ~ ODI,
 
 
 
-ggplot(d_merged_k2  %>% 
+p <- ggplot(d_merged_k2  %>% 
          group_by(stock_char)%>%
          summarize(run = mean(run.x),
                    cluster = mean(cluster))%>%
@@ -173,7 +178,11 @@ ggplot(d_merged_k2  %>%
         legend.text = element_text(size = 24, family = "Times New Roman"),
         legend.title = element_text(size = 22, family = "Times New Roman"),
         legend.position = "bottom")
-
+p
+ggsave(file = "figures/Clusters_run_type_n2_seed2.png",
+       p,
+       width = 7,
+       height = 6)
 
 d_test <- d_merged  %>% 
   group_by(stock_char)%>%
@@ -184,8 +193,7 @@ chisq.test(d_chisq$run,d_chisq$cluster, simulate.p.value=T)
 
 
 
-
-ggplot(d_merged_k2  %>% 
+p <- ggplot(d_merged_k2  %>% 
          group_by(stock_char)%>%
          summarize(release_age = mean(release_age),
                    cluster = mean(cluster))%>%
@@ -208,6 +216,51 @@ ggplot(d_merged_k2  %>%
         legend.text = element_text(size = 24, family = "Times New Roman"),
         legend.title = element_text(size = 22, family = "Times New Roman"),
         legend.position = "bottom")
+
+p
+ggsave(file = "figures/Clusters_release_age_n2_seed2.png",
+       p,
+       width = 7,
+       height = 6)
+
+
+
+d_test <- d_merged  %>% 
+  group_by(stock_char)%>%
+  summarize(run = mean(run.x),
+            cluster = mean(cluster))
+print(paste("N = ",nrow(d_test)))
+chisq.test(d_chisq$run,d_chisq$cluster, simulate.p.value=T)
+
+
+#####  random forest plot ######
+var_imp_k2 <- read.csv(
+         "~/Chinook_growth_repo/model_output/clusters/RF_importnace_values_n2.csv")
+
+var_imp_k2$variable <- reorder(var_imp_k2$variable,var_imp_k2$MeanDecreaseGini)
+
+var_imp_k2$variable
+p <- ggplot(var_imp_k2,
+       aes(x = MeanDecreaseGini, 
+           y =variable, 
+           fill = var_type))+
+  geom_bar(stat = "identity")+
+  scale_fill_manual(values = pnw_palette("Bay", n=4), 
+                    name = "Variable")+
+  theme_classic()+
+  xlab("Mean Decreasing Gini")+
+  ylab("Variable")+
+  theme(axis.title = element_text(size = 28, family = "Times New Roman"),
+        axis.text = element_text(size = 24, family = "Times New Roman"),
+        legend.text = element_text(size = 24, family = "Times New Roman"),
+        legend.title = element_text(size = 22, family = "Times New Roman"),
+        legend.position = c(0.75,0.5))
+
+
+ggsave(file = "~/Chinook_growth_repo/figures/random_forest_k2.png",
+       p,
+       width = 9,
+       height = 12)
 
 #####################################################
 ####                K = 3                        ####
@@ -247,7 +300,7 @@ p <- ggplot(data_clusters_k3 %>%
         legend.text  = element_text(size=24, family = "Times New Roman"),
         legend.position = "bottom")
 
-ggsave(file = "figures/Clusters_n3_seed1.png",
+ggsave(file = "figures/Clusters_trends_n3_seed2.png",
        p,
        width = 6,
        height = 10)
@@ -256,7 +309,7 @@ ggsave(file = "figures/Clusters_n3_seed1.png",
 stock_characteristics$stock_char <- stock_characteristics$stock
 d_merged_k3 <- merge(data_clusters_k3,stock_characteristics, by = "stock_char")
 
-ggplot(d_merged_k3 %>% 
+p <- ggplot(d_merged_k3 %>% 
          group_by(stock_char)%>%
          summarize(cluster = mean(cluster),
                    ODI= mean(ODI)),
@@ -273,10 +326,16 @@ ggplot(d_merged_k3 %>%
         axis.text = element_text(size=24, family = "Times New Roman"),
         legend.title = element_text(size=28, family = "Times New Roman"),
         legend.text  = element_text(size=24, family = "Times New Roman"),
-        legend.position = "bottom")
+        legend.position = "none")
+
+ggsave(file = "figures/Clusters_ODI_n3_seed2.png",
+       p,
+       width = 7,
+       height = 6)
 
 
-d_test <- d_merged %>% 
+
+d_test <- d_merged_k3 %>% 
   group_by(stock_char)%>%
   summarize(cluster = mean(cluster),
             ODI= mean(ODI))
@@ -285,7 +344,7 @@ kruskal.test(as.factor(cluster) ~ ODI,
              data = d_test )
 
 
-ggplot(d_merged_k3  %>% 
+p <- ggplot(d_merged_k3  %>% 
          group_by(stock_char)%>%
          summarize(run = mean(run.x),
                    cluster = mean(cluster))%>%
@@ -310,16 +369,22 @@ ggplot(d_merged_k3  %>%
         legend.title = element_text(size = 22, family = "Times New Roman"),
         legend.position = "bottom")
 
-d_test <- d_merged  %>%
+ggsave(file = "figures/Clusters_run_type_n3_seed2.png",
+       p,
+       width = 7,
+       height = 6)
+
+
+d_test <- d_merged_k3  %>%
   group_by(stock_char)%>%
-  summarize(run = mean(run.x),
+  summarize(run = mean(run),
             cluster = mean(cluster))
 print(paste("N = ",nrow(d_test)))
 chisq.test(d_test$run,d_test$cluster, simulate.p.value=T)
 
 
 
-ggplot(d_merged_k3  %>% 
+p <- ggplot(d_merged_k3  %>% 
          group_by(stock_char)%>%
          summarize(release_age = mean(release_age),
                    cluster = mean(cluster))%>%
@@ -344,19 +409,55 @@ ggplot(d_merged_k3  %>%
         legend.title = element_text(size = 22, family = "Times New Roman"),
         legend.position = "bottom")
 
-d_test <- d_merged  %>%
+ggsave(file = "figures/Clusters_release_age_n3_seed2.png",
+       p,
+       width = 7,
+       height = 6)
+
+d_test <- d_merged_k3  %>%
   group_by(stock_char)%>%
   summarize(release_age = mean(release_age),
             cluster = mean(cluster))
 print(paste("N = ",nrow(d_test)))
 chisq.test(d_test$release_age,d_test$cluster, simulate.p.value=T)
 
+
+
+#####  random forest plot ######
+var_imp_k3 <- read.csv(
+  "~/Chinook_growth_repo/model_output/clusters/RF_importnace_values_n3.csv")
+
+var_imp_k3$variable <- reorder(var_imp_k3$variable,var_imp_k3$MeanDecreaseGini)
+
+
+p <- ggplot(var_imp_k3,
+            aes(x = MeanDecreaseGini, 
+                y =variable, 
+                fill = var_type))+
+  geom_bar(stat = "identity")+
+  scale_fill_manual(values = pnw_palette("Bay", n=4), 
+                    name = "Variable")+
+  theme_classic()+
+  xlab("Mean Decreasing Gini")+
+  ylab("Variable")+
+  theme(axis.title = element_text(size = 28, family = "Times New Roman"),
+        axis.text = element_text(size = 24, family = "Times New Roman"),
+        legend.text = element_text(size = 24, family = "Times New Roman"),
+        legend.title = element_text(size = 22, family = "Times New Roman"),
+        legend.position = c(0.75,0.5))
+
+
+ggsave(file = "~/Chinook_growth_repo/figures/random_forest_k3.png",
+       p,
+       width = 9,
+       height = 12)
+
+
 #####################################################
 ####                K = 4                        ####
 #####################################################
 
 # using seed 2
-
 stock_characteristics <- read.csv("transformed_data/stock_characteristics_data.csv")
 data_clusters_k4 <- read.csv("~/Chinook_growth_repo/model_output/clusters/data_n4_age4_seed2.csv")
 
@@ -377,7 +478,7 @@ p <- ggplot(data_clusters_k4 %>%
                                    c("1" = "Cluster: 1",
                                      "2" = "Cluster: 2",
                                      "3" = "Cluster: 3",
-                                     "4" = "Cluster: 3")))+
+                                     "4" = "Cluster: 4")))+
   geom_smooth( aes(group = as.factor(cluster)),alpha = 0.2)+
   theme_test()+
   ylim(-2.5,2.5)+
@@ -390,14 +491,18 @@ p <- ggplot(data_clusters_k4 %>%
         legend.title = element_text(size=28, family = "Times New Roman"),
         legend.text  = element_text(size=24, family = "Times New Roman"),
         legend.position = "bottom")
-p
+
+ggsave(file = "figures/Clusters_trends_n4_seed2.png",
+       p,
+       width = 6,
+       height = 10)
 
 # ocean distribution 
 stock_characteristics$stock_char <- stock_characteristics$stock
 d_merged_k4 <- merge(data_clusters_k4,stock_characteristics, by = "stock_char")
 
 
-ggplot(d_merged_k4 %>% 
+p<-ggplot(d_merged_k4 %>% 
          group_by(stock_char)%>%
          summarize(cluster = mean(cluster),
                    ODI= mean(ODI)),
@@ -406,7 +511,21 @@ ggplot(d_merged_k4 %>%
   geom_boxplot()+
   scale_fill_manual(values = pnw_palette("Cascades", n=4),
                     name = "Cluster")+
-  theme_classic()
+  xlab("Cluster")+
+  ylab("Ocean Distribution Index (ODI)")+
+  theme_classic()+
+  theme(strip.text = element_text(size=20, family = "Times New Roman"),
+        axis.title = element_text(size=28, family = "Times New Roman"),
+        axis.text = element_text(size=24, family = "Times New Roman"),
+        legend.title = element_text(size=28, family = "Times New Roman"),
+        legend.text  = element_text(size=24, family = "Times New Roman"),
+        legend.position = "none")
+
+
+ggsave(file = "figures/Clusters_ODI_n4_seed2.png",
+       p,
+       width = 7,
+       height = 6)
 
 
 d_test <- d_merged_k4 %>% 
@@ -419,7 +538,7 @@ kruskal.test(as.factor(cluster) ~ ODI,
 
 
 
-ggplot(d_merged_k4  %>% 
+p<-ggplot(d_merged_k4  %>% 
          group_by(stock_char)%>%
          summarize(run = mean(run.x),
                    cluster = mean(cluster))%>%
@@ -445,8 +564,13 @@ ggplot(d_merged_k4  %>%
         legend.position = "bottom")
 
 
+ggsave(file = "figures/Clusters_run_type_n4_seed2.png",
+       p,
+       width = 7,
+       height = 6)
 
-ggplot(d_merged_k4  %>% 
+
+p <- ggplot(d_merged_k4  %>% 
          group_by(stock_char)%>%
          summarize(release_age = mean(release_age),
                    cluster = mean(cluster))%>%
@@ -472,7 +596,344 @@ ggplot(d_merged_k4  %>%
 
 
 
+ggsave(file = "figures/Clusters_release_age_n4_seed2.png",
+       p,
+       width = 7,
+       height = 6)
 
+
+
+#####  random forest plot ######
+var_imp_k4 <- read.csv(
+  "~/Chinook_growth_repo/model_output/clusters/RF_importnace_values_n4.csv")
+
+var_imp_k4$variable <- reorder(var_imp_k4$variable,var_imp_k4$MeanDecreaseGini)
+
+
+p <- ggplot(var_imp_k4,
+            aes(x = MeanDecreaseGini, 
+                y =variable, 
+                fill = var_type))+
+  geom_bar(stat = "identity")+
+  scale_fill_manual(values = pnw_palette("Bay", n=4), 
+                    name = "Variable")+
+  theme_classic()+
+  xlab("Mean Decreasing Gini")+
+  ylab("Variable")+
+  theme(axis.title = element_text(size = 28, family = "Times New Roman"),
+        axis.text = element_text(size = 24, family = "Times New Roman"),
+        legend.text = element_text(size = 24, family = "Times New Roman"),
+        legend.title = element_text(size = 22, family = "Times New Roman"),
+        legend.position = c(0.75,0.5))
+
+
+ggsave(file = "~/Chinook_growth_repo/figures/random_forest_k4.png",
+       p,
+       width = 9,
+       height = 12)
+
+
+
+#####################################################
+####                K = 5                        ####
+#####################################################
+
+# using seed 5
+stock_characteristics <- read.csv("transformed_data/stock_characteristics_data.csv")
+data_clusters_k5 <- read.csv("~/Chinook_growth_repo/model_output/clusters/data_n5_age4_seed5.csv")
+
+
+# plot cluster trends
+p <- ggplot(data_clusters_k5 %>% 
+              filter(age == 4) %>%
+              group_by(brood_year, stock, cluster)%>%
+              summarize(length = mean(length)),
+            aes(x = brood_year+4, y = length, color = as.factor(cluster), group = as.factor(stock)))+
+  geom_point(size = 0.75, alpha = 0.5)+
+  geom_line(size = 0.1)+
+  geom_hline(aes(yintercept = -2),linetype = 2,size = 0.5)+
+  geom_hline(aes(yintercept = 2),linetype = 2,size = 0.5)+
+  facet_wrap(~cluster,
+             ncol = 1,
+             labeller = labeller(cluster = 
+                                   c("1" = "Cluster: 1",
+                                     "2" = "Cluster: 2",
+                                     "3" = "Cluster: 3",
+                                     "4" = "Cluster: 4",
+                                     "5" = "Cluster: 5")))+
+  geom_smooth( aes(group = as.factor(cluster)),alpha = 0.2)+
+  theme_test()+
+  ylim(-2.5,2.5)+
+  ylab("Scaled lengths")+
+  xlab("Year")+
+  scale_color_manual(values = pnw_palette("Cascades", n=5), name = "Cluster")+
+  theme(strip.text = element_text(size=20, family = "Times New Roman"),
+        axis.title = element_text(size=28, family = "Times New Roman"),
+        axis.text = element_text(size=24, family = "Times New Roman"),
+        legend.title = element_text(size=28, family = "Times New Roman"),
+        legend.text  = element_text(size=24, family = "Times New Roman"),
+        legend.position = "bottom")
+
+ggsave(file = "figures/Clusters_trends_n5_seed5.png",
+       p,
+       width = 6,
+       height = 10)
+
+# ocean distribution 
+stock_characteristics$stock_char <- stock_characteristics$stock
+d_merged_k5 <- merge(data_clusters_k5,stock_characteristics, by = "stock_char")
+
+
+p<-ggplot(d_merged_k5 %>% 
+            group_by(stock_char)%>%
+            summarize(cluster = mean(cluster),
+                      ODI= mean(ODI)),
+          aes(x = as.factor(cluster), 
+              y = ODI, fill = as.factor(cluster)))+
+  geom_boxplot()+
+  scale_fill_manual(values = pnw_palette("Cascades", n=5),
+                    name = "Cluster")+
+  xlab("Cluster")+
+  ylab("Ocean Distribution Index (ODI)")+
+  theme_classic()+
+  theme(strip.text = element_text(size=20, family = "Times New Roman"),
+        axis.title = element_text(size=28, family = "Times New Roman"),
+        axis.text = element_text(size=24, family = "Times New Roman"),
+        legend.title = element_text(size=28, family = "Times New Roman"),
+        legend.text  = element_text(size=24, family = "Times New Roman"),
+        legend.position = "none")
+
+p
+ggsave(file = "figures/Clusters_ODI_n5_seed5.png",
+       p,
+       width = 10,
+       height = 8)
+
+
+d_test <- d_merged_k5 %>% 
+  group_by(stock_char)%>%
+  summarize(cluster = mean(cluster),
+            ODI= mean(ODI))
+print(paste("N = ",nrow(d_test)))
+kruskal.test(as.factor(cluster) ~ ODI, 
+             data = d_test )
+
+
+
+p<-ggplot(d_merged_k5  %>% 
+            group_by(stock_char)%>%
+            summarize(run = mean(run.x),
+                      cluster = mean(cluster))%>%
+            ungroup()%>%
+            dplyr::group_by(run)%>%
+            dplyr::mutate(m = n())%>%
+            dplyr::ungroup()%>%
+            dplyr::group_by(cluster, run)%>%
+            dplyr::summarise(p = n()/mean(m),
+                             m = mean(m)),
+          aes(x = as.factor(run), y = p, fill = as.factor(cluster)))+
+  geom_bar(stat = "identity")+
+  geom_text(aes(x = as.factor(run), y = 1.025, label = paste("n =", m)))+
+  scale_fill_manual(values = pnw_palette("Cascades", n=5), name = "Cluster")+
+  scale_x_discrete(label = c("Spring", "Summer", "Fall", "Late Fall"))+
+  ylab("Proporiton")+
+  xlab("Run timing")+
+  theme_test()+
+  theme(axis.title = element_text(size = 28, family = "Times New Roman"),
+        axis.text = element_text(size = 24, family = "Times New Roman"),
+        legend.text = element_text(size = 24, family = "Times New Roman"),
+        legend.title = element_text(size = 22, family = "Times New Roman"),
+        legend.position = "bottom")
+
+
+ggsave(file = "figures/Clusters_run_type_n5_seed5.png",
+       p,
+       width = 10,
+       height = 8)
+
+
+p <- ggplot(d_merged_k5  %>% 
+              group_by(stock_char)%>%
+              summarize(release_age = mean(release_age),
+                        cluster = mean(cluster))%>%
+              ungroup()%>%
+              dplyr::group_by(release_age)%>%
+              dplyr::mutate(m = n())%>%
+              dplyr::ungroup()%>%
+              dplyr::group_by(cluster, release_age)%>%
+              dplyr::summarise(p = n()/mean(m),
+                               m = mean(m)),
+            aes(x = as.factor(release_age), y = p, fill = as.factor(cluster)))+
+  geom_bar(stat = "identity")+
+  geom_text(aes(x = as.factor(release_age), y = 1.025, label = paste("n =", m)))+
+  scale_fill_manual(values = pnw_palette("Cascades", n=5), name = "Cluster")+
+  ylab("Proporiton")+
+  xlab("Run timing")+
+  theme_test()+
+  theme(axis.title = element_text(size = 28, family = "Times New Roman"),
+        axis.text = element_text(size = 24, family = "Times New Roman"),
+        legend.text = element_text(size = 24, family = "Times New Roman"),
+        legend.title = element_text(size = 22, family = "Times New Roman"),
+        legend.position = "bottom")
+
+
+
+ggsave(file = "figures/Clusters_release_age_n5_seed5.png",
+       p,
+       width = 10,
+       height = 8)
+
+#####################################################
+#####################################################
+####                                             ####
+####            Make likelihood plots            ####
+####                                             ####
+#####################################################
+#####################################################
+
+#'Likelihoods_plot_data(likelihoods, nclusters = ncol(likelihoods), order = NA)
+#'returns a long form data frame with the likelihoods
+#'that each stock is associated with each cluster and
+#'and ordering varible with maximum value of one 
+#'the ordering variable lists the stocks in order the
+#'probaiblity they are in each cluster in asceing order
+#'likelihoods - likelihoos matrix from expectation maximization function
+#'char - data frame with characteristics of stocks 
+#'nclusters - number of clusters
+#'order - a list c("Vi", "Vj", "Vk", ..."Vn")
+Likelihoods_plot_data <- function(likelihoods, char, order ,nclusters = ncol(likelihoods)-1){
+  x <- rep(0,nrow(likelihoods))
+  for(i in 1:nclusters){
+    print(order[i])
+    x <- x + likelihoods[,order[i]]*i
+  }
+  x <- (x-min(x)+0.0001) /max((x-min(x)+0.001))
+  print(head(x))
+  likelihoods$x <- x + 0.000001*1:length(x)
+  print(head(char))
+  likelihoods <- merge(likelihoods, char, by = "stock")
+  likelihoods_melt <- reshape2::melt(likelihoods, id.var = c("x", names(char)))
+  return(likelihoods_melt)
+}
+
+
+add_blank_cols <- function(df, vars){
+  combinations <- unique(df[vars])
+  nms <- names(df)[!(names(df) %in% c(vars,"variable"))]
+  combinations[nms] <- 0.00000
+  combinations$variable <- "V1"
+  return(rbind(df,combinations))
+}
+
+
+stock_characteristics <- read.csv("transformed_data/stock_characteristics_data.csv")
+
+stock_characteristics <- stock_characteristics %>% 
+  dplyr::mutate(stock_char = paste(release_type,run,sex,release_location_rmis_basin))%>%
+  dplyr::select(-stock, -run)
+d<- merge(data_clusters,stock_characteristics, by = "stock_char")
+
+d <- d %>% 
+  dplyr::group_by(stock,release_location_rmis_region)%>%
+  dplyr::summarize(cluster = mean(cluster),
+                   ODI = mean(ODI),
+                   release_age = mean(release_age),
+                   run = mean(run))
+
+# plot likelihods for different cluster numbers 
+char <- d %>% 
+  dplyr::group_by(stock)%>%
+  dplyr::summarize(
+    release_age = mean(release_age),
+    ODI = mean(ODI),
+    p52.5 = mean(ODI))%>%
+  dplyr::mutate(p52.5 = 1*(ODI < 51.0))
+
+d1 <- read.csv("~/Chinook_growth_repo/model_output/clusters/likelihoods_n2_age4_seed2.csv") %>% 
+  dplyr::select(-X)
+names(d1) <- c("V2","V1","stock")
+d1 <-Likelihoods_plot_data(d1,char,order = c("V1","V2"))
+likli_n2 <- add_blank_cols(d1, c("release_age", "p52.5"))
+likli_n2$variable <- ordered(likli_n2$variable, c("V1","V2"))
+likli_n2$n <- 2
+
+d1 <- read.csv("~/Chinook_growth_repo/model_output/clusters/likelihoods_n3_age4_seed2.csv") %>%
+  dplyr::select(-X)
+names(d1) <- c("V1","V2","V3","stock")
+d1 <-Likelihoods_plot_data(d1,char,order = c("V3","V1","V2"))
+
+likli_n3$variable <- ordered(likli_n3$variable, c("V1","V2","V3"))
+likli_n3 <- add_blank_cols(d1, c("release_age", "p52.5"))
+likli_n3$n <- 3 
+x1 <- likli_n3 %>% 
+  dplyr::group_by(stock)%>%
+  dplyr::summarise(x1 = mean(x))
+
+
+d1 <- read.csv("~/Chinook_growth_repo/model_output/clusters/likelihoods_n4_age4_seed2.csv") %>% 
+  dplyr::select(-X)
+names(d1) <- c("V1","V3","V4","V2","stock")
+d1 <-Likelihoods_plot_data(d1,char,order = c("V1","V4","V2","V3"))
+likli_n4 <- add_blank_cols(d1, c("release_age", "p52.5"))
+likli_n4$n <- 4
+
+d1 <- read.csv("~/Chinook_growth_repo/model_output/clusters/likelihoods_n5_age4_seed5.csv") %>% 
+  dplyr::select(-X)
+names(d1) <- c("V3","V2","V1","V4","V5","stock")
+d1 <-Likelihoods_plot_data(d1,char,order = c("V1","V2","V3","V4","V5"))
+likli_n5$variable <- ordered(likli_n5$variable, c("V1","V2","V3","V4","V5"))
+likli_n5 <- add_blank_cols(d1, c("release_age", "p52.5"))
+likli_n5$n <- 5
+
+likli_n2 <- merge(likli_n2, x1, by = "stock")
+likli_n3 <- merge(likli_n3, x1, by = "stock")
+likli_n4 <- merge(likli_n4, x1, by = "stock")
+likli_n5 <- merge(likli_n5, x1, by = "stock")
+
+# force stock orderings to match patterns when k =
+
+likeli <- rbind(likli_n2, likli_n3, likli_n4, likli_n5)
+likeli$variable <- plyr::mapvalues(likeli$variable,
+                                   c("V1","V2","V3","V4","V5"),
+                                   c("1","2","3","4","5"))
+
+
+## add group variables 
+groups <- c()
+for(i in 1:nrow(likeli)){
+  group_i <- ""
+  if(likeli$p52.5[i] == 1){
+    group_i <- "South, "
+  }else{ group_i <- "North, "}
+  group_i <- paste(group_i, "age", likeli$release_age[i])
+  groups <- append(groups, group_i)
+}
+
+likeli$group <- groups
+
+p <- ggplot(likeli %>% dplyr::filter(x != 0),
+            aes(x = as.factor(as.numeric(as.factor(x1))), y = value, fill = variable))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~n, ncol = 1)+
+  theme_classic()+
+  scale_fill_manual(values = pnw_palette("Bay", n =5),
+                    name = "Cluster")+
+  ylab("Probability")+
+  xlab("Stock")+
+  theme(#axis.text.x = ggplot2::element_blank(),
+        axis.title = element_text(size = 16, family = "Times New Roman"),
+        strip.text = element_text(size = 12, family = "Times New Roman"),
+        legend.title = element_text(size = 16, family = "Times New Roman"))
+
+p
+## note that the exact ordering of each cluster may change due to 
+ggsave(
+  filename = "~/Chinook_growth_repo/figures/likelihoods.png",
+  plot = p,
+  width = 10,
+  height = 4,
+  dpi = 300
+)
 
 
 

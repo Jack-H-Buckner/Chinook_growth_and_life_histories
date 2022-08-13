@@ -1,0 +1,172 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+dat <- read.csv("~/Chinook_growth_repo/transformed_data/increment_model_data_individual_observation.csv")
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+p <- ggplot(dat %>% 
+         filter(brood_year < 2015, brood_year > 1979, fishery %in% 50:59)%>%
+         mutate(year = brood_year + age)%>%
+         group_by(year) %>%
+         summarize(length = mean(length)), 
+       aes(x = year, y = length))+
+  geom_point()+
+  geom_line()+
+  geom_smooth()+
+  theme_classic()+
+  xlab("Year") + ylab("Length (mm)")+
+  theme(axis.title.x = element_text(size = 20), 
+        axis.title.y = element_text(size = 20),
+        axis.text = element_text(size = 16))
+
+ggsave(file = "~/Chinook_growth_repo/figures/average_size_trend.png",
+       p,
+       height = 5,
+       width = 6)
+p
+```
+
+
+```{r}
+ODI_dat <- read.csv("~/Chinook_growth_repo/transformed_data/marine_observations.csv")
+```
+
+
+```{r}
+ggplot(ODI_dat %>%
+  filter(!(is.na(latitude)),
+         !(is.na(longitude)),
+    stock_ %in% c("two_YO_release 1 WILL","one_YO_summer 3 WILL")),
+  aes(y = latitude, x = longitude))+
+  geom_hex()+
+  #geom_density_2d()+
+  viridis::scale_fill_viridis(trans = "log")+
+  facet_wrap(~stock_)+
+  theme_classic()
+  
+```
+
+
+
+```{r}
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(ggplot2)
+library(dplyr)
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+
+
+ggplot(data = world) +
+    geom_sf() +
+    coord_sf(xlim = c(-122.5, -165), ylim = c(39, 65), expand = FALSE)+
+  theme_classic()+
+  geom_point(data = ODI_dat %>%
+                        filter(!(is.na(latitude)),!(is.na(longitude)),
+                              stock_ %in% c("two_YO_release 1 WILL")),
+             aes(y = latitude, x = longitude),
+             size = 0.5, alpha = 0.25)+
+  geom_density2d(data = ODI_dat %>%
+                        filter(!(is.na(latitude)),!(is.na(longitude)),
+                              stock_ %in% c("two_YO_release 1 WILL")),#,"one_YO_fall 3 COWL")),
+          aes(y = latitude, x = longitude),
+          bins = 10)+
+  geom_point(data = ODI_dat %>%
+                        filter(!(is.na(latitude)),!(is.na(longitude)),
+                              stock_ %in% c("one_YO_fall 3 COWL")),
+             aes(y = latitude, x = longitude),
+             size = 0.5, alpha = 0.25, color = "red")+
+  geom_density2d(data = ODI_dat %>%
+                        filter(!(is.na(latitude)),!(is.na(longitude)),
+                              stock_ %in% c("one_YO_fall 3 COWL")),
+          aes(y = latitude, x = longitude),
+          bins = 5, color = "red")
+  
+  
+```
+
+```{r}
+ggplot(data = world) +
+    geom_sf() +
+    coord_sf(xlim = c(-122.5, -145), ylim = c(39, 65), expand = FALSE)+
+  theme_classic()+
+  geom_point(data = ODI_dat %>%
+                      filter(!(is.na(latitude)),!(is.na(longitude)),
+                              stock_ %in% c("two_YO_release 1 WILL", "one_YO_fall 3 COWL"), 
+                             longitude > -145) %>%
+               mutate(N = n())%>%
+               group_by(latitude,longitude,stock_ )%>%
+               summarize(n = n()/mean(N)),
+             aes(y = latitude, x = longitude, size = n, color = stock_),
+             alpha = 0.25)+
+  facet_wrap(~stock_)
+ 
+
+```
+```{r}
+
+lat_breaks <- c(-Inf,45,48,51,54,57, Inf)
+  
+ODI_dat$ODI_category <- cut(ODI_dat$latitude, 
+                   breaks=lat_breaks, 
+                   labels=c("1","2","3","4","5","6"))
+
+ODI_dat %>% 
+  filter(!(is.na(latitude)),!(is.na(longitude)),
+        stock_ %in% c("two_YO_release 1 WILL", "one_YO_fall 3 COWL")) 
+
+p <- ggplot(data = world) +
+    geom_sf(fill = "grey") +
+    coord_sf(xlim = c(-122.5, -151), ylim = c(39, 65), expand = FALSE)+
+  theme_classic()+
+  geom_segment(data = data.frame(x1 = -125, xend1 = -131, y1 = lat_breaks[2], yend1 = lat_breaks[2]),
+               aes(x = x1, xend = xend1, y = y1, yend = yend1))+
+  geom_segment(data = data.frame(x1 = -126, xend1 = -132, y1 = lat_breaks[3], yend1 = lat_breaks[3]),
+               aes(x = x1, xend = xend1, y = y1, yend = yend1))+
+  geom_segment(data = data.frame(x1 = -130, xend1 = -136, y1 = lat_breaks[4], yend1 = lat_breaks[4]),
+               aes(x = x1, xend = xend1, y = y1, yend = yend1))+
+  geom_segment(data = data.frame(x1 = -134, xend1 = -140, y1 = lat_breaks[5], yend1 = lat_breaks[5]),
+               aes(x = x1, xend = xend1, y = y1, yend = yend1))+
+  geom_segment(data = data.frame(x1 = -137, xend1 = -143, y1 = lat_breaks[6], yend1 = lat_breaks[6]),
+               aes(x = x1, xend = xend1, y = y1, yend = yend1))
+
+p
+# ggsave(file = "~/Chinook_growth_repo/figures/ocean_dsn_examples.png",
+#        p,
+#        height = 5,
+#        width = 6)
+# p
+```
+
+```{r}
+ggplot(data = world) +
+    geom_sf(fill = "grey") +
+    coord_sf(xlim = c(-122.5, -160 ), ylim = c(39, 65), expand = FALSE)
+```
+
+
+
+```{r}
+stock_characteristics <- read.csv("~/Chinook_growth_repo/transformed_data/stock_characteristics_data.csv")
+```
+
+```{r}
+stock_characteristics %>% select(stock, ODI)
+```
+
+```{r}
+ODI_dat %>%
+          filter(!(is.na(latitude)),!(is.na(longitude)),
+                  stock_ %in% c("two_YO_release 1 WILL"))%>%
+  nrow()
+```
+
+
+
+

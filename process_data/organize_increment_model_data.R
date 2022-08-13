@@ -62,21 +62,20 @@ dat1 <- dat1%>%
 
 ### add ocean distribution data ####
 
-
-
 # merge with means
 d <- merge(dat1, stock_characteristics, by = 
              c("stock", "release_type", "run", "sex", "release_location_rmis_basin"))
 
 
 # group stock by ocean distribution and release age
-dat1 <- d %>% mutate(marine_dsn = (ODI < 47.5)) %>%
+ODI_threshold <- 47.5 # original was 47.5, but removal of ocean age one increased ODI values 
+dat1 <- d %>% mutate(marine_dsn = (ODI < ODI_threshold)) %>%  
   mutate(group = paste(release_age, ";", marine_dsn))
 dat1$group <- as.numeric(as.factor(dat1$group))
 
 
 # create data frame with groupings for each stock 
-group_labs <- dat1 %>% mutate(marine_dsn = (ODI < 47.5)) %>%
+group_labs <- dat1 %>% mutate(marine_dsn = (ODI < ODI_threshold)) %>%
   mutate(group = paste(release_age, ";", marine_dsn))
 group_labs$group_num <- as.numeric(as.factor(group_labs$group))
 group_labs <- group_labs%>%dplyr::group_by(group_num, group)%>%dplyr::summarize(n =n())
@@ -119,7 +118,6 @@ dat_means <- dat1 %>%
                    release_age = median(release_age))
 
 
-
 # calacuate groupng for each stock 
 dat_groups <- dat_means%>%
   dplyr::group_by(stock)%>%
@@ -128,7 +126,6 @@ dat_groups <- dat_means%>%
 dat_alt_groups <- dat_means%>%
   dplyr::group_by(stock)%>%
   dplyr::summarize(run = median(alt_group))
-
 
 dat_nums <- dat_means %>%
   dplyr::group_by(stock,age,fishery,brood_year)%>%

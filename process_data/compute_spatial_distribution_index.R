@@ -59,7 +59,7 @@ dat1$release_age = dat1$release_year- dat1$brood_year
 dat1$ocean_age = dat1$recovery_year - dat1$release_year
   
   
-# filter out unreasanoble ages
+# filter out unreasanoble ages (a small number of the total observations) 
 dat1 <- dat1 %>% filter(age < 7, age > 0)
 
 # define function to seperat stocks into one of three 
@@ -88,10 +88,7 @@ dat1$release_type <- release_type
 # growth models 
 dat1 <- dat1 %>% 
   group_by(release_location_rmis_basin, 
-           sex,
-           run,
-           release_type
-  ) %>%
+           sex,run,release_type) %>%
   mutate(stock = paste(release_type, run, sex, release_location_rmis_basin),
          stock_ = paste(release_type, run, release_location_rmis_basin))
 
