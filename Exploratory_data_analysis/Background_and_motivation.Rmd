@@ -5,13 +5,21 @@ output: html_notebook
 
 ```{r}
 dat <- read.csv("~/Chinook_growth_repo/transformed_data/increment_model_data_individual_observation.csv")
+stock_characteristics <- read.csv("~/Chinook_growth_repo/transformed_data/stock_characteristics_data.csv")
+```
+
+```{r}
+d <- merge(dat, stock_characteristics, by = "stock")
 ```
 
 ```{r}
 library(ggplot2)
 library(dplyr)
+
+
 p <- ggplot(dat %>% 
-         filter(brood_year < 2015, brood_year > 1979, fishery %in% 50:59)%>%
+         filter(brood_year < 2015, brood_year > 1979, fishery %in% 50:59,
+                release_location_rmis_region.x %in% c("LOCR", "UPCR", "CECR", "SNAK"))%>%
          mutate(year = brood_year + age)%>%
          group_by(year) %>%
          summarize(length = mean(length)), 
@@ -117,9 +125,29 @@ ODI_dat$ODI_category <- cut(ODI_dat$latitude,
                    breaks=lat_breaks, 
                    labels=c("1","2","3","4","5","6"))
 
-ODI_dat %>% 
+grouped_ODI_dat <- ODI_dat %>% 
   filter(!(is.na(latitude)),!(is.na(longitude)),
-        stock_ %in% c("two_YO_release 1 WILL", "one_YO_fall 3 COWL")) 
+        stock_ %in% c("two_YO_release 1 WILL", "one_YO_fall 3 COWL"))%>%
+  group_by(stock_)%>%
+  mutate(N = n())%>%
+  ungroup()%>%
+  group_by(stock_,
+           ODI_category) %>%
+  summarize(`prop.` = n()/mean(N))
+
+dat_lat_lon <- data.frame(ODI_category = c("1","2","3","4","5","6"),
+                          lat = c(43.5,46.5,49.5,52.5,55.5,58.5),
+                          lon = c(-125,-126,-130,-134,-137,-139))
+
+grouped_ODI_dat <- merge(grouped_ODI_dat,dat_lat_lon, by = "ODI_category") %>%
+  mutate(lon = lon - 2.0 * (stock_ == "two_YO_release 1 WILL"))
+
+grouped_ODI_dat$stock <- plyr::mapvalues(grouped_ODI_dat$stock_, c("two_YO_release 1 WILL", "one_YO_fall 3 COWL"),
+                                   c("Willamette R., Spring Run", "Cowlitz R., Fall Run"))
+
+```
+
+```{r}
 
 p <- ggplot(data = world) +
     geom_sf(fill = "grey") +
@@ -134,30 +162,57 @@ p <- ggplot(data = world) +
   geom_segment(data = data.frame(x1 = -134, xend1 = -140, y1 = lat_breaks[5], yend1 = lat_breaks[5]),
                aes(x = x1, xend = xend1, y = y1, yend = yend1))+
   geom_segment(data = data.frame(x1 = -137, xend1 = -143, y1 = lat_breaks[6], yend1 = lat_breaks[6]),
-               aes(x = x1, xend = xend1, y = y1, yend = yend1))
+               aes(x = x1, xend = xend1, y = y1, yend = yend1))+
+  geom_point(data=grouped_ODI_dat,
+             mapping=aes(x = lon,y=lat,
+                         size = `prop.`, 
+                         alpha = `prop.`,
+                         color = stock))+
+  ylab("Latitude")+
+  xlab("Longitude")+
+  scale_color_manual(values = PNWColors::pnw_palette("Bay", n = 2))+
+  theme(axis.title = element_text(size = 16),
+        axis.text.y = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 20, hjust = 0.7),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 16))#, vjust = -0.05, hjust = 0.1
 
 p
-# ggsave(file = "~/Chinook_growth_repo/figures/ocean_dsn_examples.png",
-#        p,
-#        height = 5,
-#        width = 6)
-# p
+ggsave(file = "~/Chinook_growth_repo/figures/ocean_dsn_examples.png",
+       p,
+       height = 9,
+       width = 6.5)
+
 ```
-
-```{r}
-ggplot(data = world) +
-    geom_sf(fill = "grey") +
-    coord_sf(xlim = c(-122.5, -160 ), ylim = c(39, 65), expand = FALSE)
-```
-
-
 
 ```{r}
 stock_characteristics <- read.csv("~/Chinook_growth_repo/transformed_data/stock_characteristics_data.csv")
+d <- read.csv( "~/Chinook_growth_repo/transformed_data/cluster_analysis_data.csv")
+
+d <- merge(d,stock_characteristics,
+           by = "stock")
 ```
 
+
+
 ```{r}
-stock_characteristics %>% select(stock, ODI)
+table_dat <- d %>% group_by(stock,run.x, release_age)%>%
+  summarize(n = n())%>%
+  ungroup()%>%
+  reshape2::dcast(run.x ~ release_age)
+  # group_by(run.x, release_age)%>%
+  # summarize(n = n())%>%
+  # reshape2::dcast(run.x ~ release_age)
+
+table_dat$run <-plyr::mapvalues(table_dat$run.x, 
+                                c(1,2,3,8), 
+                                c("Spring run", "Summer run","Fall run", "Late fall run"))
+table_dat <- table_dat %>% 
+  select(run, `1`,`2`)
+
+names(table_dat) <- c("", "Release age 1", "Release age 2")
+
+table_dat%>%kableExtra::kable()
 ```
 
 ```{r}
@@ -165,6 +220,63 @@ ODI_dat %>%
           filter(!(is.na(latitude)),!(is.na(longitude)),
                   stock_ %in% c("two_YO_release 1 WILL"))%>%
   nrow()
+```
+
+
+
+```{r}
+d <- read.csv( "~/Chinook_growth_repo/transformed_data/cluster_analysis_data.csv")
+
+```
+
+
+```{r}
+p <- ggplot(d %>% filter(fishery == 50), 
+       aes(x = brood_year, y = length_unscaled, group = stock))+
+  geom_point(alpha = 0.5, size = 0.75)+
+  geom_path(size = 0.2, alpha = 0.5)+
+  theme_classic()+
+  ylab("Length at age 4")+
+  xlab("Brood year")+
+  theme(axis.title = element_text(size = 18),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 16))#, vjust = -0.05, hjust = 0.1
+p
+ggsave(file = "~/Chinook_growth_repo/figures/all_trends.png",
+       p,
+       height = 4,
+       width = 4.5)
+
+
+```
+
+```{r}
+dat <- read.csv("~/Chinook_growth_repo/transformed_data/increment_model_data.csv")
+```
+
+```{r}
+p <- ggplot(dat %>% filter(fishery ==50), 
+       aes(x = brood_year, y = length, group = as.factor(stock), color = as.factor(age)))+
+  geom_point(alpha = 0.1, size = 0.5)+
+  geom_line(alpha = 0.1, width = 0.5)+
+  geom_smooth(aes(group = as.factor(age)))+
+  facet_wrap(~age, ncol = 2, scales = "free")+
+  theme_classic()+
+  xlab("Brood Year")+
+  ylab("Length (cm)")+
+  scale_color_manual(values = PNWColors::pnw_palette("Bay", n = 3), name = "Age")+
+  theme(strip.text = element_text(size = 16), 
+        axis.text = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 18),
+        legend.title = element_text(size = 18))
+
+ggsave(file = "~/Chinook_growth_repo/figures/length_at_age.png",
+       p,
+       height = 6,
+       width = 7)
 ```
 
 

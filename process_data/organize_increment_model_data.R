@@ -48,8 +48,8 @@ dat1 = dat1 %>%
   dplyr::ungroup()%>%
   dplyr::group_by(sex,run,release_location_rmis_basin, 
                   release_location_rmis_region, release_type) %>% 
-  dplyr::group_by(nyears_max = max(nyears))
-dplyr::filter(nyears_max > min_yrs)
+  dplyr::mutate(nyears_max = max(nyears))%>%
+  dplyr::filter(nyears_max > min_yrs)
 
 
 dat1 <- dat1%>%
@@ -68,7 +68,8 @@ d <- merge(dat1, stock_characteristics, by =
 
 
 # group stock by ocean distribution and release age
-ODI_threshold <- 47.5 # original was 47.5, but removal of ocean age one increased ODI values 
+ODI_threshold <- 50.0 # original was 47.5, but removal of ocean age one increased ODI values 
+# I used ODI = 50 as the cuttoff based on visual inspection of the cluster plots
 dat1 <- d %>% mutate(marine_dsn = (ODI < ODI_threshold)) %>%  
   mutate(group = paste(release_age, ";", marine_dsn))
 dat1$group <- as.numeric(as.factor(dat1$group))
@@ -87,7 +88,7 @@ group_labs <- group_labs%>%dplyr::group_by(group_num, group)%>%dplyr::summarize(
 alt_grouping <- function(run,dsn){
   if(run %in% c(1,2)){
     return(1)
-  }else if(dsn < 47.5){
+  }else if(dsn < ODI_threshold){
     return(2)
   }else{
     return(3)
@@ -132,7 +133,7 @@ dat_nums <- dat_means %>%
   dplyr::summarize(y_n = mean(y_n))
 
 
-dat1$gear_char <- paste(dat1$gear, "a")
+#dat1$gear_char <- paste(dat1$gear, "a")
 write.csv(dat1,"~/Chinook_growth_repo/transformed_data/increment_model_data_individual_observation.csv" )
 write.csv(dat_means, "~/Chinook_growth_repo/transformed_data/increment_model_data.csv")
 write.csv(group_labs, "~/Chinook_growth_repo/transformed_data/increment_model_group_labels.csv")

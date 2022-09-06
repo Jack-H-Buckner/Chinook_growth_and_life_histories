@@ -267,11 +267,13 @@ ggsave(file = "~/Chinook_growth_repo/figures/random_forest_k2.png",
 #####################################################
 
 # using seed 2
-stock_characteristics <- read.csv("transformed_data/stock_characteristics_data.csv")
+stock_characteristics <- read.csv("~/Chinook_growth_repo/transformed_data/stock_characteristics_data.csv")
 data_clusters_k3 <- read.csv("~/Chinook_growth_repo/model_output/clusters/data_n3_age4_seed2.csv")
 
 
 # plot cluster trends
+pal <- PNWColors::pnw_palette("Bay", n=3)
+pal[2]
 p <- ggplot(data_clusters_k3 %>% 
               filter(age == 4) %>%
               group_by(brood_year, stock, cluster)%>%
@@ -292,7 +294,7 @@ p <- ggplot(data_clusters_k3 %>%
   ylim(-2.5,2.5)+
   ylab("Scaled lengths")+
   xlab("Year")+
-  scale_color_manual(values = pnw_palette("Cascades", n=3), name = "Cluster")+
+  scale_color_manual(values = PNWColors::pnw_palette("Bay", n=3), name = "Cluster")+
   theme(strip.text = element_text(size=20, family = "Times New Roman"),
         axis.title = element_text(size=28, family = "Times New Roman"),
         axis.text = element_text(size=24, family = "Times New Roman"),
@@ -300,7 +302,7 @@ p <- ggplot(data_clusters_k3 %>%
         legend.text  = element_text(size=24, family = "Times New Roman"),
         legend.position = "bottom")
 
-ggsave(file = "figures/Clusters_trends_n3_seed2.png",
+ggsave(file = "~/Chinook_growth_repo/figures/Clusters_trends_n3_seed2.png",
        p,
        width = 6,
        height = 10)
@@ -383,10 +385,10 @@ print(paste("N = ",nrow(d_test)))
 chisq.test(d_test$run,d_test$cluster, simulate.p.value=T)
 
 
-
+d_merged_k3$release_age1 <- plyr::mapvalues(d_merged_k3$release_age, c(1,2), c(0,1))
 p <- ggplot(d_merged_k3  %>% 
          group_by(stock_char)%>%
-         summarize(release_age = mean(release_age),
+         summarize(release_age = mean(release_age1),
                    cluster = mean(cluster))%>%
          ungroup()%>%
          dplyr::group_by(release_age)%>%
@@ -398,10 +400,10 @@ p <- ggplot(d_merged_k3  %>%
        aes(x = as.factor(release_age), y = p, fill = as.factor(cluster)))+
   geom_bar(stat = "identity")+
   geom_text(aes(x = as.factor(release_age), y = 1.025, label = paste("n =", m)))+
-  scale_fill_manual(values = pnw_palette("Cascades", n=3), name = "Cluster")+
+  scale_fill_manual(values = PNWColors::pnw_palette("Cascades", n=3), name = "Cluster")+
   #scale_x_discrete(label = c("Spring", "Summer", "Fall", "Late Fall"))+
   ylab("Proporiton")+
-  xlab("Run timing")+
+  xlab("Release age")+
   theme_test()+
   theme(axis.title = element_text(size = 28, family = "Times New Roman"),
         axis.text = element_text(size = 24, family = "Times New Roman"),
@@ -409,7 +411,7 @@ p <- ggplot(d_merged_k3  %>%
         legend.title = element_text(size = 22, family = "Times New Roman"),
         legend.position = "bottom")
 
-ggsave(file = "figures/Clusters_release_age_n3_seed2.png",
+ggsave(file = "~/Chinook_growth_repo/figures/Clusters_release_age_n3_seed2.png",
        p,
        width = 7,
        height = 6)
