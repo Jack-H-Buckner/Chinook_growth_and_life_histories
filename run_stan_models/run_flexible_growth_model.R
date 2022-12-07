@@ -95,13 +95,15 @@ run_analysis <- function(stock_group){
     beta_devs = 1
   )
   
-  #options(mc.cores = parallel::detectCores())
+  options(mc.cores = parallel::detectCores())
   fit = stan(stan_file,
              data = stan_data,
              chains =4,
              iter = 4000,
-             control=list(max_treedepth = 12, adapt_delta=0.90),
-             pars = c("B", "disp", "devs_stock_sd", "rho", "pred","predicted","var_obs", "var_process"))
+             control=list(max_treedepth = 12, adapt_delta=0.95),
+             pars = c("B", "disp", "devs_stock_sd", "rho", 
+                      "pred","predicted","var_obs", 
+                      "var_process", "age_inc"))
   
   launch_shinystan(fit)
   samples <- as.data.frame(fit)
@@ -109,17 +111,17 @@ run_analysis <- function(stock_group){
               stan_data$beta_disp, stan_data$alpha_devs,
               stan_data$beta_devs)
   
-  write.csv(samples, paste("~/Chinook_growth_repo/model_output/HMC_samples/samples_", stock_group, ".csv", sep = ""))
-  
-  write.csv(samples[sample(1:4000,500),], paste("~/Chinook_growth_repo/model_output/HMC_samples/short_samples_", stock_group, ".csv", sep = ""))
-  write.csv(samples,"~/Chinook_growth_repo/model_output/HMC_samples/priors_1.csv")
+  write.csv(samples, paste("~/Chinook_growth_repo/model_output/HMC_samples/samples_flexible_", stock_group, ".csv", sep = ""))
+  write.csv(data, paste("~/Chinook_growth_repo/model_output/HMC_samples/data_flexible_", stock_group, ".csv", sep = ""))
+  write.csv(samples[sample(1:4000,500),], paste("~/Chinook_growth_repo/model_output/HMC_samples/short_samples_flexible_", stock_group, ".csv", sep = ""))
+  write.csv(samples,"~/Chinook_growth_repo/model_output/HMC_samples/priors_flexible_1.csv")
   
 }
 
-run_analysis(1)
-run_analysis(2)
-run_analysis(3)
-run_analysis(4)
+# run_analysis(1)
+# run_analysis(2)
+# run_analysis(3)
+# run_analysis(4)
 
 ##############################################
 ####                                      ####
@@ -127,10 +129,10 @@ run_analysis(4)
 ####                                      ####
 ##############################################
 
+
 data_path <- "~/Chinook_growth_repo/transformed_data/increment_model_data.csv"
 
-stan_file <- "~/Chinook_growth_repo/stan_models/base_model.stan"
-
+stan_file <- "~/Chinook_growth_repo/stan_models/flexible_growth_model.stan"
 data <- read.csv(data_path)
 
 run_analysis_2 <- function(stock_group) {
@@ -192,6 +194,8 @@ run_analysis_2 <- function(stock_group) {
     n_year_max =  max(years_dat$max_years),
     n_year = years_dat$max_years,
     X = as.matrix(X[1:max(years_dat$max_years),]),
+    a_min = min(data$release_age),
+    n_age = 5 - min(data$release_age),
     
     # Priors
     B_sd = 0.25,
@@ -207,7 +211,9 @@ run_analysis_2 <- function(stock_group) {
              chains =4,
              iter = 4000,
              control=list(max_treedepth = 12, adapt_delta=0.95),
-             pars = c("B", "disp", "devs_stock_sd", "rho", "pred","predicted","var_obs", "var_process"))
+             pars = c("B", "disp", "devs_stock_sd", "rho", 
+                      "pred","predicted","var_obs", 
+                      "var_process", "age_inc"))
   
   launch_shinystan(fit)
   samples <- as.data.frame(fit)
@@ -216,8 +222,8 @@ run_analysis_2 <- function(stock_group) {
               stan_data$beta_devs)
   
   
-  write.csv(samples, paste("model_output/HMC_samples/samples_NPGO_BI_", stock_group, ".csv", sep = ""))
-  write.csv(samples[sample(1:4000,500),], paste("model_output/HMC_samples/short_samples_NPGO_BI_", stock_group, ".csv", sep = ""))
+  write.csv(samples, paste("model_output/HMC_samples/samples_flexible_NPGO_BI_", stock_group, ".csv", sep = ""))
+  write.csv(samples[sample(1:4000,500),], paste("model_output/HMC_samples/short_samples_flexible_NPGO_BI_", stock_group, ".csv", sep = ""))
   write.csv(samples,"model_output/HMC_samples/priors_1.csv")
   
 }

@@ -41,7 +41,6 @@ parameters {
   real rho_trans;
   real<lower=0> disp;
   real FE_fishery[n_fishery];
-  real FE_age[3];
 }
 
 transformed parameters {
@@ -120,7 +119,7 @@ transformed parameters {
     for(a in release_age[i]:(age[i])) {
         pred[i] = pred[i] + age_inc[a,stock[i]] * growth_inc[brood_year[i]+a, stock[i]]; // add year effects 
     }
-    pred[i] = pred[i] + FE_fishery[fishery[i]] + FE_age[age[i]-2];
+    pred[i] = pred[i] + FE_fishery[fishery[i]]; 
   }
   
   
@@ -129,10 +128,9 @@ transformed parameters {
 model {
 
   intercept ~ normal(1.0,2.0);
-  rho_trans ~ normal(0,0.25);
+  rho_trans ~ normal(0,0.1);
   FE_fishery ~ normal(0,0.1);
-  FE_age ~ normal(0,0.1);
-  slopes_trans ~ normal(0.0, 0.1); // random effects
+  slopes_trans ~ normal(0.0, 0.25); 
   disp ~ gamma(alpha_disp,beta_disp);
   devs_stock_sd ~ gamma(alpha_devs,beta_devs);
   devs_stock ~ normal(0,1);
@@ -171,9 +169,9 @@ generated quantities {
   for(i in 1:N) {
     predicted[i] = release_length[i]; // starting length
     for(a in release_age[i]:(age[i])) {
-        predicted[i] = predicted[i] + (1.0 - slope[stock[i]]*a) * growth_inc_preds[brood_year[i]+a, stock[i]]; // add year effects
+        predicted[i] = predicted[i] + age_inc[a,stock[i]] * growth_inc_preds[brood_year[i]+a, stock[i]]; // add year effects
     }
-    predicted[i] = predicted[i] + FE_fishery[fishery[i]] + FE_age[age[i]-2];
+    predicted[i] = predicted[i] + FE_fishery[fishery[i]];
   }
 
   var_obs = 0;

@@ -35,20 +35,9 @@ k <- c(2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6)
 
 seed <- c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4)
 
-ggplot(data.frame(k = k, MSE = vals, seed = seed),
-       aes(x = k, y = MSE, linetype = as.factor(seed)))+
-  geom_point()+
-  geom_line()+
-  theme_classic()
-
-ggsave("figures/model_selection.png",
-       height = 5,
-       width = 7)
-
-
-
 ggplot(data.frame(k = k, MSE = vals, seed = seed) %>%
-         group_by(k)%>%summarize(MSE = min(MSE)),
+         group_by(k)%>%
+         summarize(MSE = min(MSE)),
        aes(x = k, y = MSE))+
   geom_point()+
   geom_line()+
@@ -57,6 +46,19 @@ ggplot(data.frame(k = k, MSE = vals, seed = seed) %>%
 ggsave("figures/model_selection.png",
        height = 5,
        width = 7)
+
+
+
+ggplot(data.frame(k = k, MSE = vals, seed = seed),
+       aes(x = k, y = MSE, color= as.factor(seed)))+
+  geom_point()+
+  geom_line()+
+  theme_classic()
+
+ggsave("figures/model_selection_1.png",
+       height = 5,
+       width = 7)
+
 
 
 

@@ -192,7 +192,7 @@ ODI <- dat1 %>%
 
 # group stock characteristics differntiating by sex 
 dat_stocks <- dat1 %>%
-  dplyr::group_by(stock,release_location_rmis_basin,release_type,run) %>%
+  dplyr::group_by(stock,release_location_rmis_basin,release_type,run,release_age) %>%
   dplyr::filter(!(is.na(latitude)), sex %in% c("M","F")) %>%
   dplyr::summarize(
     sex = Mode(sex),
@@ -220,6 +220,10 @@ ggplot(
 ggsave("figures/ODI_imputation.png",
        height = 5,
        width = 5)
+
+
+# add release age
+
 
 write.csv(distribution_summary , "transformed_data/stock_characteristics_data.csv")
 write.csv(dat1 , "transformed_data/marine_observations.csv")

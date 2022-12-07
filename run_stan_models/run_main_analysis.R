@@ -10,9 +10,9 @@ source("run_stan_models/useful_functions.R")
 ####      Run all covariates       ####
 ####                               ####
 #######################################
-data_path <- "transformed_data/increment_model_data.csv"
+data_path <- "~/Chinook_growth_repo/transformed_data/increment_model_data.csv"
 
-stan_file <- "stan_models/base_model.stan"
+stan_file <- "~/Chinook_growth_repo/stan_models/base_model.stan"
 
 
 data <- read.csv(data_path)
@@ -99,7 +99,9 @@ run_analysis <- function(stock_group){
              chains =4,
              iter = 4000,
              control=list(max_treedepth = 12, adapt_delta=0.90),
-             pars = c("B", "disp", "devs_stock_sd", "rho", "pred","predicted","var_obs", "var_process"))
+             pars = c("B", "disp", "devs_stock_sd", "rho", 
+                      "pred","predicted","var_obs", "var_process",
+                      "FE_age","slope"))
 
   launch_shinystan(fit)
   samples <- as.data.frame(fit)
@@ -205,7 +207,9 @@ run_analysis_2 <- function(stock_group) {
              chains =4,
              iter = 4000,
              control=list(max_treedepth = 12, adapt_delta=0.95),
-             pars = c("B", "disp", "devs_stock_sd", "rho", "pred","predicted","var_obs", "var_process"))
+             pars = c("B", "disp", "devs_stock_sd", "rho", 
+                      "pred","predicted","var_obs", "var_process",
+                      "FE_age","slope"))
 
   launch_shinystan(fit)
   samples <- as.data.frame(fit)

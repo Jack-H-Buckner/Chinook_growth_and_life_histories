@@ -25,16 +25,18 @@ setwd("~/Chinook_growth_repo")
 # Pink Salmon Gulf of Alaska 
 
 
-Pinks <- read.csv("data/Pink_salmon.csv")
-# organize pinks data 
-Pinks <- Pinks%>%
-  dplyr::mutate(Pink = as.numeric(Pink))%>%
-  dplyr::filter(!(is.na(Pink)))
-Pinks <- melt(Pinks, id.var = "Year")
-Pinks <- Pinks%>%dplyr::group_by(variable)%>%dplyr::mutate(value = value/max(value))
-Pinks <- Pinks %>% filter(variable == "Pink")
+#Pinks <- read.csv("data/Pink_salmon.csv")
+pinks_dat <- readxl::read_xlsx("~/Chinook_growth_repo/data/pink_data.xlsx")
 
-Pinks <- data.frame(year = Pinks$Year, Pinks = Pinks$value)
+# # organize pinks data 
+# Pinks <- Pinks%>%
+#   dplyr::mutate(Pink = as.numeric(Pink))%>%
+#   dplyr::filter(!(is.na(Pink)))
+# Pinks <- melt(Pinks, id.var = "Year")
+# Pinks <- Pinks%>%dplyr::group_by(variable)%>%dplyr::mutate(value = value/max(value))
+# Pinks <- Pinks %>% filter(variable == "Pink")
+
+Pinks <- data.frame(year = pinks_dat$Year, Pinks = pinks_dat$northamerica_pink_catchescape)
 Pinks$Pinks <- scale(Pinks$Pinks)
 
 
@@ -286,11 +288,13 @@ X <- covriates %>% select(year,
                           BI)
 
 
-write.csv(X,"transformed_data/covariates.csv")
+write.csv(X,"~/Chinook_growth_repo/transformed_data/covariates.csv")
 
 
-p <- ggplot(melt(X, id.var = "year"), aes(x = year, y = value))+geom_point()+geom_line()+facet_wrap(~variable, ncol = 1)+
+p <- ggplot(melt(X, id.var = "year"), aes(x = year, y = value))+
+  geom_point()+geom_line()+facet_wrap(~variable, ncol = 1)+
   theme_test()+theme(text = element_text(size  = 20))
+p
 ggsave( "figures/covariates.png", p, width =10, height = 10)
 
 

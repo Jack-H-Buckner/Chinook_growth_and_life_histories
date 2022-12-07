@@ -2,7 +2,7 @@ library(ggplot2)
 library(dplyr)
 library(reshape2)
 setwd("~/Chinook_growth_repo")
-source("clusters/GAM_clusters.R")
+
 
 # Load growth increment data 
 dat_means <- read.csv("~/Chinook_growth_repo/transformed_data/increment_model_data.csv")
@@ -26,6 +26,16 @@ d <- d %>% group_by(stock,release_type, run,
          n_year > 20)
 
 
+
+d_with_outliers <- d %>% group_by(stock,release_type, run,
+                    release_location_rmis_basin)%>% # standardize lengt hat age observations for each stock 
+  mutate(length_unscaled = length,
+         m = mean(length))%>%
+  mutate(length = length - m)%>%
+  ungroup()%>%
+  mutate(s = sd(length))%>%
+  mutate(length = length/s)
+
 # standardize length data for each stock 
 d <- d %>% group_by(stock,release_type, run,
            release_location_rmis_basin)%>% # standardize lengt hat age observations for each stock 
@@ -34,12 +44,13 @@ d <- d %>% group_by(stock,release_type, run,
   mutate(length = length - m)%>%
   ungroup()%>%
   mutate(s = sd(length))%>%
-  mutate(length = length/s)
-
+  mutate(length = length/s) %>%
+  filter(length > - 4.0) # remove outliers in first revisions this was set to 6
 
 
 # save data for use in other analyses
 write.csv(d, "~/Chinook_growth_repo/transformed_data/cluster_analysis_data.csv")
+write.csv(d_with_outliers, "~/Chinook_growth_repo/transformed_data/cluster_analysis_data_with_outliers.csv")
 
 
 N_stocks <- length(unique(d$stock))
@@ -54,5 +65,8 @@ d %>%
   kableExtra::kable()%>%
   kableExtra::save_kable("~/Chinook_growth_repo/figures/clusters_stocks_table.png")
 
+ggplot(dat_means,aes(y=length,x=brood_year))+geom_point()
 
 
+
+ggplot(d,aes(y=length,x=brood_year))+geom_point()

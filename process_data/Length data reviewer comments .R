@@ -24,6 +24,9 @@ ggplot(dat_main_fishery,
   facet_wrap(~age, ncol = 2)
 
 
+### observations by age and fishery tabel ###
+
+
 # plot total observations in each fishery over time
 dat_prop_fishery_over_time <- dat_main_fishery %>%
   group_by(brood_year, age)%>%

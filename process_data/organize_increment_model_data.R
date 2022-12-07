@@ -14,6 +14,7 @@ dat = readRDS("data/final_dat.rds")
 dat1 = dat %>% filter(release_location_rmis_region %in% c("LOCR","UPCR","CECR", "SNAK","NOOR","WILP","GRAY","NWC","SKAG","NPS"), 
                       brood_year > 1975, brood_year < 2015,
                       fishery %in% c(21,24,45,46,50:59),
+                      length_code == 0, length > 110, # remove small outliers
                       sex %in% c("M","F"), 
                       run %in% c(1,2,3,8),
                       age > 2)
@@ -28,6 +29,7 @@ release_lengths <- dat1%>%
 
 # add to data set 
 dat1 <- merge(dat1, release_lengths, by = c("release_type", "run", "sex"))
+
 
 
 # filter out stock-year-age-fishery combinations with fewer than 10 observations
@@ -64,7 +66,7 @@ dat1 <- dat1%>%
 
 # merge with means
 d <- merge(dat1, stock_characteristics, by = 
-             c("stock", "release_type", "run", "sex", "release_location_rmis_basin"))
+             c("stock", "release_type", "run", "sex", "release_location_rmis_basin","release_age"))
 
 
 # group stock by ocean distribution and release age
@@ -141,3 +143,6 @@ write.csv(alt_group_labs, "~/Chinook_growth_repo/transformed_data/increment_mode
 write.csv(dat_groups, "~/Chinook_growth_repo/transformed_data/increment_model_groups.csv")
 write.csv(dat_nums, "~/Chinook_growth_repo/transformed_data/increment_model_num_obs.csv")
 
+
+
+dat_means
